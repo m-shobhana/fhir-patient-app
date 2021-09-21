@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+    <http:listener-config name="patient-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8082" />
+    </http:listener-config>
+    <apikit:config name="patient-api-config" api="patient-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="297ac9e6-53e7-4824-94d8-bd94dbc5a84a" >
+		<salesforce:basic-connection username="shobhana.muralidher-unzc@force.com" password="99952023sjMR" />
+	</salesforce:sfdc-config>
+	<flow name="getPatientID" doc:id="daa8b6ee-90cc-4da5-a8c0-6199f4a850d4" >
+		<salesforce:query doc:name="getPatient" doc:id="7e4a2776-495e-4da4-b3a0-a867e10280dc" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Name FROM Account WHERE PID__c=':id']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{'id':attributes.uriParams.id}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="873a1c73-86ce-4462-87ac-34e4247f5ed1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Name: payload.Name
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="createOrUpdatePatients" doc:id="4774c5da-8d46-4a3c-99b7-78464dd9690f" >
+		<ee:transform doc:name="Transform Message" doc:id="ad18117b-efb1-4ca5-adc0-cf3ff3fdb74e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	PID__c: payload.id,
+	Name: payload.name[0].use,
+	Phone: payload.telecom[1].value,
+	Type: payload.telecom[1].use
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="4356ad64-0413-46ed-a66f-ca9539a59f6f" config-ref="Salesforce_Config" objectType="Account" externalIdFieldName="PID__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="a1b3feeb-063f-4f6e-9a04-23ee8b0e1f16" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
