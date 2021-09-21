@@ -30,7 +30,7 @@ pipeline
 
      steps{ 
 
-     bat 'C:\\Users\\SHOBHM\\AppData\\Roaming\\npm\\newman run C:\Users\SHOBHM\Postman_collection\Patient.postman_collection.json
+     bat 'C:\\Users\\SHOBHM\\AppData\\Roaming\\npm\\newman run C:\\Users\\SHOBHM\\Postman_collection\\Patient.postman_collection.json --disable-unicode'
      } 
 
     } 
@@ -39,7 +39,7 @@ pipeline
 
     steps{ 
 
-    bat 'mvn sonar:sonar -Dsonar.sources=src/ -Dsonar.host.url=http://localhost:9000 -Dsonar.login=f4c18d4d00473a2ebb7dcd38844a79c8b868fd75' 
+    bat 'mvn sonar:sonar -Dsonar.sources=src/ -Dsonar.host.url=http://localhost:9000 -Dsonar.login=a2f700572105b3cd93083d5d1988541ed374d5bd' 
 
     } 
 
